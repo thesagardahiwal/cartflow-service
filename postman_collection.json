@@ -1,0 +1,74 @@
+{
+  "info": {
+    "name": "CartFlow Service API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/v1/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": { "language": "json" }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/v1/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": { "language": "json" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/v1/cart"
+          }
+        },
+        {
+          "name": "Add Item",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/v1/cart/items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"productId\": \"prod_123\",\n    \"productName\": \"Wireless Headphones\",\n    \"category\": \"Electronics\",\n    \"quantity\": 2,\n    \"unitPrice\": 5000\n}",
+              "options": {
+                "raw": { "language": "json" }
+              }
+            }
+          }
+        },
+        {
+          "name": "Checkout",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/v1/cart/checkout"
+          }
+        }
+      ]
+    }
+  ]
+}
