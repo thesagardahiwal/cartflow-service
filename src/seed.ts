@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { PromotionCampaign } from './src/repositories/models/PromotionCampaign';
+import { PromotionCampaign } from './repositories/models/PromotionCampaign';
 
 dotenv.config();
 

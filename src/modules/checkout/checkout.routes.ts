@@ -6,8 +6,7 @@ const router = Router();
 
 router.use(requireAuth);
 
-// The requirement specifies GET /api/v1/cart/checkout. 
-// We will mount this router under /api/v1/cart
-router.get('/checkout', checkoutController.processCheckout);
+// Use POST for checkout since it mutates state and requires idempotency
+router.post('/', checkoutController.processCheckout);
 
 export default router;

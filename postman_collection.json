@@ -11,6 +11,7 @@
           "name": "Register",
           "request": {
             "method": "POST",
+            "header": [],
             "url": "http://localhost:3000/api/v1/auth/register",
             "body": {
               "mode": "raw",
@@ -25,6 +26,7 @@
           "name": "Login",
           "request": {
             "method": "POST",
+            "header": [],
             "url": "http://localhost:3000/api/v1/auth/login",
             "body": {
               "mode": "raw",
@@ -44,13 +46,20 @@
           "name": "Get Cart",
           "request": {
             "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <YOUR_TOKEN>", "type": "text" }
+            ],
             "url": "http://localhost:3000/api/v1/cart"
           }
         },
         {
-          "name": "Add Item",
+          "name": "Add/Update Item",
           "request": {
             "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <YOUR_TOKEN>", "type": "text" },
+              { "key": "Idempotency-Key", "value": "add-item-1", "type": "text" }
+            ],
             "url": "http://localhost:3000/api/v1/cart/items",
             "body": {
               "mode": "raw",
@@ -60,12 +69,43 @@
               }
             }
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "Checkout",
+      "item": [
         {
-          "name": "Checkout",
+          "name": "Process Checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <YOUR_TOKEN>", "type": "text" },
+              { "key": "Idempotency-Key", "value": "checkout-1", "type": "text" }
+            ],
+            "url": "http://localhost:3000/api/v1/checkout",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": { "language": "json" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Dashboard",
           "request": {
             "method": "GET",
-            "url": "http://localhost:3000/api/v1/cart/checkout"
+            "header": [
+              { "key": "Authorization", "value": "Bearer <YOUR_TOKEN>", "type": "text" }
+            ],
+            "url": "http://localhost:3000/api/v1/analytics/dashboard"
           }
         }
       ]

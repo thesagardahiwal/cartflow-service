@@ -1,10 +1,10 @@
-fix: resolve docker build issues and redis retry spam
+docs: update swagger, postman collection and automation scripts
 
-This commit addresses several minor issues preventing the application from running successfully inside Docker and in local development.
+This commit brings the documentation and docker orchestration in line with the new architecture.
 
-- Upgrade Node.js image to v20-alpine in Dockerfile to support Mongoose 9.x `process.getBuiltinModule` internals.
-- Explicitly copy `swagger.json` into the production stage of the Docker build to prevent MODULE_NOT_FOUND runtime crashes.
-- Add `REDIS_URI` to `docker-compose.yml` to ensure the app container connects to the Redis container natively.
-- Apply a custom `retryStrategy` and `maxRetriesPerRequest` to `ioredis` in `CacheService` to prevent infinite reconnection loop spam when developing locally without Redis.
-- Fix Mongoose schema strictness typing in `audit.listener.ts` (mapping falsy userId to `undefined` rather than `null`).
-- Expose the Redis client publicly in `CacheService` for listeners to execute real-time hash increments.
+- Updated `swagger.json` with comprehensive OpenAPI 3.0 specs for public endpoints, including Idempotency headers, BearerAuth security schemes, and proper payload formatting.
+- Fixed Swagger UI CORS/Host routing issues by utilizing relative `servers.url` configuration.
+- Completely rewrote `postman_collection.json` to include the newest endpoints (Analytics, Auth, Cart, Checkout) with embedded idempotency keys and proper HTTP methods.
+- Converted the Checkout endpoint route from `GET` to `POST` to conform to REST conventions for mutating states, and successfully bound it to the Idempotency middleware.
+- Moved `seed.ts` inside the `src` directory so it natively compiles with `tsc` during Docker build steps.
+- Chained `seed.js` into the `package.json` startup script so the Mongo cluster seeds automatically when containers spin up.

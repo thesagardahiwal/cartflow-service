@@ -26,8 +26,9 @@ app.use(requestContextMiddleware);
 // Global Rate limiting
 app.use('/api', apiLimiter);
 
-// Idempotency for mutating cart operations
-app.use('/api/v1/cart', idempotencyMiddleware);
+// Idempotency for mutating operations
+app.use('/api/v1/cart/items', idempotencyMiddleware);
+app.use('/api/v1/checkout', idempotencyMiddleware);
 
 // Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -39,7 +40,7 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/cart', checkoutRoutes);
+app.use('/api/v1/checkout', checkoutRoutes);
 app.use('/api/v1/cart', cartRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
 
