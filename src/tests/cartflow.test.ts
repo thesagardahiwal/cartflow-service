@@ -180,7 +180,7 @@ describe('CartFlow API Tests', () => {
 
     it('should correctly calculate checkout summary', async () => {
       const res = await request(app)
-        .get('/api/v1/cart/checkout')
+        .post('/api/v1/checkout')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
