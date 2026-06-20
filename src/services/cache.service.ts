@@ -3,10 +3,19 @@ import { env } from '../config/env';
 import logger from '../config/logger';
 
 class CacheService {
-  private client: Redis;
+  public client: Redis;
 
   constructor() {
-    this.client = new Redis(env.REDIS_URI);
+    this.client = new Redis(env.REDIS_URI, {
+      retryStrategy: (times) => {
+        if (times > 3) {
+          logger.warn('Redis connection failed after 3 retries. Cache will be disabled.');
+          return null; // Stop retrying
+        }
+        return Math.min(times * 100, 2000);
+      },
+      maxRetriesPerRequest: 1,
+    });
     
     this.client.on('connect', () => {
       logger.info('Connected to Redis');

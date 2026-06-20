@@ -9,6 +9,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - MONGODB_URI=mongodb://mongo:27017/cartflow
+      - REDIS_URI=redis://redis:6379
       - JWT_SECRET=super_secret_docker_key
       - JWT_EXPIRES_IN=1h
     depends_on:

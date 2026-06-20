@@ -1,0 +1,10 @@
+fix: resolve docker build issues and redis retry spam
+
+This commit addresses several minor issues preventing the application from running successfully inside Docker and in local development.
+
+- Upgrade Node.js image to v20-alpine in Dockerfile to support Mongoose 9.x `process.getBuiltinModule` internals.
+- Explicitly copy `swagger.json` into the production stage of the Docker build to prevent MODULE_NOT_FOUND runtime crashes.
+- Add `REDIS_URI` to `docker-compose.yml` to ensure the app container connects to the Redis container natively.
+- Apply a custom `retryStrategy` and `maxRetriesPerRequest` to `ioredis` in `CacheService` to prevent infinite reconnection loop spam when developing locally without Redis.
+- Fix Mongoose schema strictness typing in `audit.listener.ts` (mapping falsy userId to `undefined` rather than `null`).
+- Expose the Redis client publicly in `CacheService` for listeners to execute real-time hash increments.

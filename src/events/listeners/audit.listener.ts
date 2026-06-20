@@ -8,7 +8,7 @@ const handleAuditEvent = async (action: string, data: any) => {
   try {
     const { userId, entityId, ...payload } = data;
     await auditLogRepository.createLog({
-      userId: userId ? new mongoose.Types.ObjectId(userId) : null,
+      userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
       action,
       payload: { entityId, ...payload }
     });
