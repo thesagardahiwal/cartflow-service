@@ -16,6 +16,13 @@ export class CartRepository {
   async save(cart: ICart): Promise<ICart> {
     return cart.save();
   }
+
+  async findExpiredActiveCarts(): Promise<ICart[]> {
+    return Cart.find({
+      expiresAt: { $lte: new Date() },
+      status: 'ACTIVE'
+    }).exec();
+  }
 }
 
 export const cartRepository = new CartRepository();

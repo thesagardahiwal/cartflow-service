@@ -6,6 +6,8 @@ import { CategoryStrategy } from './strategies/CategoryStrategy';
 import { BulkStrategy } from './strategies/BulkStrategy';
 import { PremiumStrategy } from './strategies/PremiumStrategy';
 import { campaignRepository } from '../../repositories/campaign.repository';
+import { eventBus } from '../../events/eventBus';
+import { EVENTS } from '../../events/eventTypes';
 
 export class PromotionEngine {
   private strategies: Record<CampaignType, CampaignStrategy>;
@@ -23,37 +25,40 @@ export class PromotionEngine {
    * Calculates discounts based on active campaigns.
    */
   async calculate(cart: ICart): Promise<{ discounts: DiscountResult[], finalAmount: number, appliedCampaigns: string[] }> {
-    const activeCampaigns = await campaignRepository.getActiveCampaigns();
-    
-    let totalDiscount = 0;
-    const appliedDiscounts: DiscountResult[] = [];
-    const appliedCampaignNames: string[] = [];
+    const discounts: DiscountResult[] = [];
+    const appliedCampaigns: string[] = [];
+    let finalAmount = cart.subtotal;
 
-    // Campaigns are already sorted by priority in the repository
+    const activeCampaigns = await campaignRepository.getActiveCampaigns();
+
     for (const campaign of activeCampaigns) {
       const strategy = this.strategies[campaign.type];
       if (strategy) {
-        const result = strategy.apply(cart, campaign);
-        if (result) {
-          // Add to total discount
-          totalDiscount += result.amount;
-          appliedDiscounts.push(result);
-          appliedCampaignNames.push(result.campaignName);
+        const discountResult = strategy.apply(cart, campaign);
+        if (discountResult && discountResult.amount > 0) {
+          discounts.push(discountResult);
+          finalAmount -= discountResult.amount;
+          appliedCampaigns.push(discountResult.campaignName);
+
+          eventBus.emit(EVENTS.PROMOTION_APPLIED, {
+            cartId: cart._id,
+            campaignId: campaign._id,
+            campaignName: discountResult.campaignName,
+            discountAmount: discountResult.amount,
+            timestamp: new Date()
+          });
         }
       }
     }
 
-    // Ensure total discount doesn't exceed subtotal
-    if (totalDiscount > cart.subtotal) {
-      totalDiscount = cart.subtotal;
+    if (finalAmount < 0) {
+      finalAmount = 0;
     }
 
-    const finalAmount = cart.subtotal - totalDiscount;
-
     return {
-      discounts: appliedDiscounts,
+      discounts,
       finalAmount,
-      appliedCampaigns: appliedCampaignNames,
+      appliedCampaigns,
     };
   }
 }

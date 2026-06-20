@@ -1,42 +1,45 @@
-import { Cart } from '../repositories/models/Cart';
-import { auditLogRepository } from '../repositories/auditLog.repository';
-import { logger } from '../config/logger';
+// Removed duplicate imports
+import { cartRepository } from '../repositories/cart.repository';
+import logger from '../config/logger';
+import cron from 'node-cron';
+import { eventBus } from '../events/eventBus';
+import { EVENTS } from '../events/eventTypes';
+import { OutboxEvent } from '../repositories/models/OutboxEvent';
 
-export class CartCleanupJob {
-  /**
-   * Sweeps expired carts and updates their status to EXPIRED.
-   * This handles the background cron job described in the requirements.
-   */
-  async sweepExpiredCarts() {
-    try {
-      const now = new Date();
-      
-      // Find carts that are past their expiresAt date and are still ACTIVE
-      const expiredCarts = await Cart.find({ 
-        expiresAt: { $lte: now },
-        status: 'ACTIVE'
-      });
+export const sweepExpiredCarts = async () => {
+  try {
+    const expiredCarts = await cartRepository.findExpiredActiveCarts();
 
-      if (expiredCarts.length === 0) return;
-
+    if (expiredCarts.length > 0) {
       logger.info(`Found ${expiredCarts.length} expired carts. Processing...`);
 
       for (const cart of expiredCarts) {
         cart.status = 'EXPIRED';
-        await cart.save();
+        await cartRepository.save(cart);
 
-        await auditLogRepository.createLog({
+        const eventPayload = {
           userId: cart.userId,
-          action: 'CART_EXPIRED',
-          payload: { cartId: cart._id }
+          cartId: cart._id,
+          total: cart.total
+        };
+
+        eventBus.emit(EVENTS.CART_EXPIRED, eventPayload);
+
+        await OutboxEvent.create({
+          eventType: EVENTS.CART_EXPIRED,
+          payload: eventPayload,
+          processed: false
         });
       }
 
       logger.info('Expired carts sweep completed.');
-    } catch (error) {
-      logger.error('Error sweeping expired carts:', error);
     }
+  } catch (error) {
+    logger.error('Error sweeping expired carts:', { error });
   }
-}
+};
 
-export const cartCleanupJob = new CartCleanupJob();
+export const initCartCleanupJob = () => {
+  // Run hourly
+  cron.schedule('0 * * * *', sweepExpiredCarts);
+};

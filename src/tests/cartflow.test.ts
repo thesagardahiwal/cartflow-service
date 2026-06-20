@@ -2,6 +2,19 @@ import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
 
+jest.mock('ioredis', () => {
+  return jest.fn().mockImplementation(() => {
+    return {
+      on: jest.fn(),
+      get: jest.fn().mockResolvedValue(null),
+      set: jest.fn().mockResolvedValue('OK'),
+      del: jest.fn().mockResolvedValue(1),
+      hincrby: jest.fn(),
+      hincrbyfloat: jest.fn()
+    };
+  });
+});
+
 jest.mock('express-request-id', () => {
   return () => (req: any, res: any, next: any) => {
     req.id = 'test-req-id';
@@ -12,7 +25,7 @@ jest.mock('express-request-id', () => {
 import app from '../app';
 import { PromotionCampaign } from '../repositories/models/PromotionCampaign';
 import { Cart } from '../repositories/models/Cart';
-import { cartCleanupJob } from '../jobs/cartCleanup';
+import { sweepExpiredCarts } from '../jobs/cartCleanup';
 
 let mongoServer: MongoMemoryServer;
 
@@ -194,7 +207,7 @@ describe('CartFlow API Tests', () => {
         expiresAt: new Date(Date.now() - 100000) // in the past
       });
 
-      await cartCleanupJob.sweepExpiredCarts();
+      await sweepExpiredCarts();
 
       const updatedCart = await Cart.findById(expiredCart._id);
       expect(updatedCart?.status).toBe('EXPIRED');

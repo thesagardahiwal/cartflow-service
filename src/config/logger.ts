@@ -1,9 +1,19 @@
 import winston from 'winston';
 import { env } from './env';
+import { requestContext } from '../middlewares/requestContext.middleware';
+
+const addRequestId = winston.format((info) => {
+  const context = requestContext.getStore();
+  if (context?.requestId) {
+    info.requestId = context.requestId;
+  }
+  return info;
+});
 
 const logFormat = winston.format.combine(
   winston.format.timestamp(),
   winston.format.errors({ stack: true }),
+  addRequestId(),
   winston.format.json()
 );
 
@@ -19,3 +29,5 @@ export const logger = winston.createLogger({
     }),
   ],
 });
+
+export default logger;
