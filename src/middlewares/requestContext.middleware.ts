@@ -8,6 +8,11 @@ export interface RequestContext {
 
 export const requestContext = new AsyncLocalStorage<RequestContext>();
 
+export const getRequestId = () => {
+  const store = requestContext.getStore();
+  return store ? store.requestId : undefined;
+};
+
 export const requestContextMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const requestId = req.headers['x-request-id'] as string || crypto.randomUUID();
   req.id = requestId; // Fallback compatibility

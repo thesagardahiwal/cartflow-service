@@ -4,8 +4,7 @@ import { Analytics } from '../../repositories/models/Analytics';
 class AnalyticsController {
   async getDashboard(req: Request, res: Response, next: NextFunction) {
     try {
-      // Get the latest analytics snapshot
-      const latestAnalytics = await Analytics.findOne().sort({ date: -1 });
+      const latestAnalytics = await Analytics.findOne().sort({ date: -1 }).lean();
 
       if (!latestAnalytics) {
         return res.status(200).json({

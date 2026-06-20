@@ -12,6 +12,9 @@ import checkoutRoutes from './modules/checkout/checkout.routes';
 import analyticsRoutes from './modules/analytics/analytics.routes';
 import swaggerUi from 'swagger-ui-express';
 import * as swaggerDocument from '../swagger.json';
+import mongoose from 'mongoose';
+import { cacheService } from './services/cache.service';
+import { metricsService } from './services/metrics.service';
 
 const app = express();
 
@@ -26,6 +29,16 @@ app.use(requestContextMiddleware);
 // Global Rate limiting
 app.use('/api', apiLimiter);
 
+// Metrics Middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    metricsService.recordRequest(duration);
+  });
+  next();
+});
+
 // Idempotency for mutating operations
 app.use('/api/v1/cart/items', idempotencyMiddleware);
 app.use('/api/v1/checkout', idempotencyMiddleware);
@@ -35,7 +48,27 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Healthcheck
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'UP', reqId: req.id });
+  res.status(200).json({ status: 'UP', reqId: req.id, timestamp: new Date().toISOString() });
+});
+
+app.get('/health/dependencies', (req, res) => {
+  const isMongoUp = mongoose.connection.readyState === 1;
+  const isRedisUp = cacheService.client.status === 'ready';
+
+  const status = isMongoUp && isRedisUp ? 'UP' : 'DEGRADED';
+  const statusCode = isMongoUp && isRedisUp ? 200 : 503;
+
+  res.status(statusCode).json({
+    mongo: isMongoUp ? 'UP' : 'DOWN',
+    redis: isRedisUp ? 'UP' : 'DOWN',
+    status
+  });
+});
+
+// Metrics
+app.get('/metrics', async (req, res) => {
+  const metrics = await metricsService.getMetrics();
+  res.status(200).json(metrics);
 });
 
 // Routes

@@ -7,6 +7,7 @@ import { EVENTS } from '../events/eventTypes';
 import { OutboxEvent } from '../repositories/models/OutboxEvent';
 import mongoose from 'mongoose';
 import { cacheService } from './cache.service';
+import { metricsService } from './metrics.service';
 
 export class CheckoutService {
   async checkout(userId: string) {
@@ -21,12 +22,17 @@ export class CheckoutService {
 
     // Apply totals
     const totalDiscountAmount = discounts.reduce((sum, d) => sum + d.amount, 0);
-    cart.discount = totalDiscountAmount;
-    cart.total = finalAmount;
-    cart.status = 'CHECKED_OUT';
+    const currentVersion = cart.version || 0;
 
-    // Save cart state
-    await cartRepository.save(cart);
+    const savedCart = await cartRepository.updateCartWithOCC(cart._id.toString(), currentVersion, {
+      discount: totalDiscountAmount,
+      total: finalAmount,
+      status: 'CHECKED_OUT'
+    });
+
+    if (!savedCart) {
+      throw new AppError('Cart was modified by another request.', 409);
+    }
 
     // Invalidate cache
     await cacheService.del(`cart:${userId}`);
@@ -48,6 +54,9 @@ export class CheckoutService {
       payload: eventPayload,
       processed: false
     });
+
+    metricsService.recordCheckout();
+    metricsService.recordPromotionUsage(discounts.length);
 
     return {
       subtotal: cart.subtotal,

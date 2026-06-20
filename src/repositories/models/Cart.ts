@@ -16,6 +16,7 @@ export interface ICart extends Document {
   subtotal: number;
   discount: number;
   total: number;
+  version: number;
   expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -37,9 +38,12 @@ const cartSchema = new Schema<ICart>({
   subtotal: { type: Number, default: 0, min: 0 },
   discount: { type: Number, default: 0, min: 0 },
   total: { type: Number, default: 0, min: 0 },
-  expiresAt: { type: Date, required: true, index: true }, // TTL index managed manually or in code
+  version: { type: Number, default: 0 },
+  expiresAt: { type: Date, required: true, index: true },
 }, {
   timestamps: true
 });
+
+cartSchema.index({ userId: 1, status: 1 });
 
 export const Cart = mongoose.model<ICart>('Cart', cartSchema);

@@ -76,7 +76,8 @@
           },
           "subtotal": { "type": "number" },
           "discount": { "type": "number" },
-          "total": { "type": "number" }
+          "total": { "type": "number" },
+          "version": { "type": "number", "description": "Optimistic Concurrency Control version tracking" }
         }
       }
     }
@@ -273,7 +274,7 @@
           },
           "400": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ValidationErrorResponse" } } } },
           "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
-          "409": { "description": "Idempotency Conflict (Payload mismatch)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "409": { "description": "Idempotency Conflict or Cart modified by another request (OCC)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
           "429": { "description": "Too Many Requests", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
           "500": { "description": "Internal Server Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
         }
@@ -342,7 +343,7 @@
           },
           "400": { "description": "Cannot checkout an empty cart", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
           "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
-          "409": { "description": "Idempotency Conflict", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "409": { "description": "Idempotency Conflict or Cart modified by another request (OCC)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
           "429": { "description": "Too Many Requests", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
           "500": { "description": "Internal Server Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
         }
@@ -385,6 +386,16 @@
                             "type": "object",
                             "properties": {
                               "category": { "type": "string" },
+                              "count": { "type": "number" }
+                            }
+                          }
+                        },
+                        "mostUsedCampaigns": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "campaignId": { "type": "string" },
                               "count": { "type": "number" }
                             }
                           }

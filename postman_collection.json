@@ -58,7 +58,7 @@
             "method": "POST",
             "header": [
               { "key": "Authorization", "value": "Bearer <YOUR_TOKEN>", "type": "text" },
-              { "key": "Idempotency-Key", "value": "add-item-1", "type": "text" }
+              { "key": "Idempotency-Key", "value": "{{$guid}}", "type": "text" }
             ],
             "url": "http://localhost:3000/api/v1/cart/items",
             "body": {
@@ -81,7 +81,7 @@
             "method": "POST",
             "header": [
               { "key": "Authorization", "value": "Bearer <YOUR_TOKEN>", "type": "text" },
-              { "key": "Idempotency-Key", "value": "checkout-1", "type": "text" }
+              { "key": "Idempotency-Key", "value": "{{$guid}}", "type": "text" }
             ],
             "url": "http://localhost:3000/api/v1/checkout",
             "body": {

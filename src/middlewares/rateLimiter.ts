@@ -1,13 +1,48 @@
-import rateLimit from 'express-rate-limit';
+import { Request, Response, NextFunction } from 'express';
+import { cacheService } from '../services/cache.service';
+import jwt from 'jsonwebtoken';
+import { env } from '../config/env';
 
-export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again after 15 minutes',
-    errorCode: 'RATE_LIMIT_EXCEEDED'
+export const apiLimiter = async (req: Request, res: Response, next: NextFunction) => {
+  let identifier = req.ip;
+
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, env.JWT_SECRET) as any;
+      if (decoded.id) {
+        identifier = decoded.id;
+      }
+    } catch (e) {
+      // Ignore
+    }
   }
-});
+
+  const key = `rate:${identifier}`;
+  const limit = 100;
+  const windowSeconds = 60;
+
+  try {
+    if (cacheService.client.status !== 'ready') return next();
+    const currentCount = await cacheService.client.incr(key);
+    
+    if (currentCount === 1) {
+      await cacheService.client.expire(key, windowSeconds);
+    }
+
+    if (currentCount > limit) {
+      const ttl = await cacheService.client.ttl(key);
+      res.setHeader('Retry-After', ttl);
+      return res.status(429).json({
+        success: false,
+        message: 'Too many requests, please try again later.',
+        errorCode: 'RATE_LIMIT_EXCEEDED'
+      });
+    }
+    
+    next();
+  } catch (error) {
+    next();
+  }
+};

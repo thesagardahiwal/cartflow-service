@@ -1,4 +1,0 @@
-test: update integration tests for checkout POST method
-
-- Updated checkout API test in `cartflow.test.ts` to use `POST /api/v1/checkout` instead of `GET`, reflecting the recent REST architectural change.
-- Ensured full integration test suite passes with high coverage and accuracy against the new idempotent checkout route.

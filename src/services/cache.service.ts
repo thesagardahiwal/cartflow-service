@@ -1,6 +1,7 @@
 import Redis from 'ioredis';
 import { env } from '../config/env';
 import logger from '../config/logger';
+import { metricsService } from './metrics.service';
 
 class CacheService {
   public client: Redis;
@@ -29,7 +30,12 @@ class CacheService {
   async get<T>(key: string): Promise<T | null> {
     try {
       const data = await this.client.get(key);
-      return data ? JSON.parse(data) : null;
+      if (data) {
+        metricsService.recordCacheHit();
+        return JSON.parse(data);
+      }
+      metricsService.recordCacheMiss();
+      return null;
     } catch (error) {
       logger.error(`Error fetching cache for key ${key}`, { error });
       return null;
